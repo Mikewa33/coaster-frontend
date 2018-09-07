@@ -6,6 +6,7 @@ import { BrowserRouter, Switch, Route, IndexRoute, Redirect } from 'react-router
 import RoutesLib from './routes'
 import reduxThunk from 'redux-thunk';
 
+require('../styles/style.scss');
 
 import App from './components/app';
 
@@ -30,7 +31,7 @@ ReactDOM.render(
       </App>
     </BrowserRouter>
   </Provider>,
-  document.querySelector('.container')
+  document.querySelector('.app')
 );
 
 
