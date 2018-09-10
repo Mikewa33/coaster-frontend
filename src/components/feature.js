@@ -50,8 +50,6 @@ class Feature extends Component {
     // { type: "Feature",  properties: {...}, geometry: {...} }
     const path = geoPath().projection(this.projection())
     const centroid = this.projection().invert(path.centroid(geography))
-    console.log(centroid)
-    console.log(geography)
     this.setState({
       center: centroid,
       zoom: 6,
@@ -60,7 +58,8 @@ class Feature extends Component {
   }
 
   ifOperating(park,i){
-    if (park.status == "Operating" && park.coasters.length > 10){
+    //ark.status == "Operating" && park.coasters.length > 10
+    if (true){
       return (
         <Marker
                   key={i}

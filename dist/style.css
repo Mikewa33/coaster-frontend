@@ -1,7 +1,40 @@
 .header {
+  padding: 0 40px 0 40px;
+  background-color: #161E22; }
+
+.navbar {
   width: 100%;
-  display: inline-block;
-  height: 48px; }
+  height: 48px;
+  display: flex;
+  align-items: center; }
+  .navbar ul {
+    display: inline-block;
+    flex: 1; }
+    .navbar ul li {
+      display: inline-block;
+      float: right;
+      margin-left: 20px; }
+  .navbar a {
+    color: white;
+    text-decoration: none; }
+
+.park-name {
+  color: blue; }
+  .park-name:hover {
+    display: block !important; }
+
+.right-panel {
+  width: 25%;
+  float: right;
+  background: gray; }
+
+.error {
+  color: red; }
+
+body {
+  margin: 0px;
+  font-family: 'Open Sans', sans-serif;
+  background: #F9FBFC; }
 
 
 /*# sourceMappingURL=style.css.map*/

@@ -10,16 +10,17 @@ import Forgotpassword from './components/auth/forgotpassword';
 import Resetpassword from './components/auth/resetpassword';
 import Feature from './components/feature';
 import RequireAuth from './components/auth/require_auth';
-import Welcome from './components/welcome';
 import Confirmation from './components/auth/confirmation';
 import Account from './components/account/account';
 import EditEmail from './components/account/editemail';
 import EditPassword from './components/account/editpassword';
+import Map from './components/map/map';
+import Main from './components/main';
 
 const RoutesLib = () => {
     return (
         <Switch>
-            <Route path="/" exact component={Welcome}/>
+            <Route path="/" exact component={Main}/>
             <Route path="/signin" component={Signin} />
             <Route path="/signout" component={Signout} />
             <Route path="/signup" component={Signup} />

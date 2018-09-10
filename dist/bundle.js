@@ -58351,6 +58351,60 @@ function authClearErrorMsg() {
 
 /***/ }),
 
+/***/ "./src/actions/parkAction.js":
+/*!***********************************!*\
+  !*** ./src/actions/parkAction.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getParks = getParks;
+
+var _axios = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+
+var _axios2 = _interopRequireDefault(_axios);
+
+var _appWide = __webpack_require__(/*! ./appWide */ "./src/actions/appWide.js");
+
+var _types = __webpack_require__(/*! ./types */ "./src/actions/types.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ROOT_URL = 'http://localhost:3090';
+var MAIN_URL = 'http://localhost:3000';
+
+function getParks() {
+  return function (dispatch) {
+    return _axios2.default.get(MAIN_URL + '/parks', {
+      headers: { authorization: localStorage.getItem('token') }
+    }).then(function (response) {
+      console.log(Date.now());
+      var coasters = [];
+      for (var i = 0; response.data.length > i; i++) {
+        coasters = coasters.concat(response.data[i].coasters);
+      }
+      console.log(Date.now());
+      console.log(coasters);
+      dispatch({
+        type: _types.PARKS_GET,
+        payload: response.data
+      });
+    }).catch(function (response) {
+      console.log(response);
+      //This means the user isn't auth
+      //accountErrorCheck(response, "/account", dispatch)
+    });
+  };
+}
+
+/***/ }),
+
 /***/ "./src/actions/types.js":
 /*!******************************!*\
   !*** ./src/actions/types.js ***!
@@ -58374,6 +58428,7 @@ var AUTH_EMAIL_SENT = exports.AUTH_EMAIL_SENT = "auth_email_sent";
 var AUTH_ERROR_CLEAR = exports.AUTH_ERROR_CLEAR = "auth_error_clear";
 var ACCOUNT_INFO = exports.ACCOUNT_INFO = "account_info";
 var ACCOUNT_ERROR = exports.ACCOUNT_ERROR = "account_error";
+var PARKS_GET = exports.PARKS_GET = "parks_get";
 
 /***/ }),
 
@@ -58835,7 +58890,11 @@ var App = function (_Component) {
         null,
         _react2.default.createElement(_flash2.default, null),
         _react2.default.createElement(_header2.default, null),
-        this.props.children
+        _react2.default.createElement(
+          'div',
+          { className: 'container' },
+          this.props.children
+        )
       );
     }
   }]);
@@ -59755,11 +59814,15 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 
-var _authActions = __webpack_require__(/*! ../actions/authActions */ "./src/actions/authActions.js");
+var _parkAction = __webpack_require__(/*! ../actions/parkAction */ "./src/actions/parkAction.js");
 
-var actions = _interopRequireWildcard(_authActions);
+var actions = _interopRequireWildcard(_parkAction);
 
 var _reactSimpleMaps = __webpack_require__(/*! react-simple-maps */ "./node_modules/react-simple-maps/lib/index.js");
+
+var _d3Geo = __webpack_require__(/*! d3-geo */ "./node_modules/d3-geo/index.js");
+
+var _d3GeoProjection = __webpack_require__(/*! d3-geo-projection */ "./node_modules/d3-geo-projection/index.js");
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -59783,69 +59846,229 @@ var Feature = function (_Component) {
   function Feature() {
     _classCallCheck(this, Feature);
 
-    return _possibleConstructorReturn(this, (Feature.__proto__ || Object.getPrototypeOf(Feature)).apply(this, arguments));
+    var _this = _possibleConstructorReturn(this, (Feature.__proto__ || Object.getPrototypeOf(Feature)).call(this));
+
+    _this.state = {
+      center: [0, 20],
+      zoom: 1,
+      currentCountry: null,
+      marks: []
+    };
+    _this.projection = _this.projection.bind(_this);
+    _this.handleGeographyClick = _this.handleGeographyClick.bind(_this);
+    _this.ifOperating = _this.ifOperating.bind(_this);
+    return _this;
   }
 
   _createClass(Feature, [{
     key: 'componentWillMount',
     value: function componentWillMount() {
-      //this.props.fetchMessage();
+      this.props.getParks();
+    }
+  }, {
+    key: 'projection',
+    value: function projection() {
+      return (0, _d3GeoProjection.geoTimes)().translate([this.props.width / 2, this.props.height / 2]).scale(80);
+    }
+  }, {
+    key: 'handleGeographyClick',
+    value: function handleGeographyClick(geography) {
+      // geography looks something like this:
+      // { type: "Feature",  properties: {...}, geometry: {...} }
+      var path = (0, _d3Geo.geoPath)().projection(this.projection());
+      var centroid = this.projection().invert(path.centroid(geography));
+      this.setState({
+        center: centroid,
+        zoom: 6,
+        currentCountry: geography.properties.name
+      });
+    }
+  }, {
+    key: 'ifOperating',
+    value: function ifOperating(park, i) {
+      //ark.status == "Operating" && park.coasters.length > 10
+      if (true) {
+        return _react2.default.createElement(
+          _reactSimpleMaps.Marker,
+          {
+            key: i,
+            marker: { name: park.name, coordinates: [park.long, park.lat] },
+            style: {
+              default: { fill: "#FF5722" },
+              hover: { fill: "#FFFFFF" },
+              pressed: { fill: "#FF5722" }
+            }
+          },
+          _react2.default.createElement('circle', {
+            cx: 0,
+            cy: 0,
+            r: 1,
+            style: {
+              stroke: "#FF5722",
+              strokeWidth: 5,
+              opacity: 0.9
+            }
+          }),
+          _react2.default.createElement('text', {
+            textAnchor: 'middle',
+            y: park.markerOffset,
+            style: {
+              fontFamily: "Roboto, sans-serif",
+              fill: "#607D8B"
+            }
+          })
+        );
+      } else {}
     }
   }, {
     key: 'render',
     value: function render() {
+      var _this2 = this;
+
+      var map_style_1 = {
+        display: "block"
+      };
+
+      var map_style_2 = {
+        display: "none"
+      };
+      if (this.state.zoom >= 6) {
+        map_style_1 = {
+          display: "none"
+        };
+
+        map_style_2 = {
+          display: "block"
+        };
+      }
       return _react2.default.createElement(
         'div',
         { style: wrapperStyles },
         _react2.default.createElement(
-          _reactSimpleMaps.ComposableMap,
-          {
-            projectionConfig: {
-              scale: 205,
-              rotation: [-11, 0, 0]
-            },
-            width: 980,
-            height: 551,
-            style: {
-              width: "100%",
-              height: "auto"
-            }
-          },
+          'div',
+          { style: map_style_1 },
           _react2.default.createElement(
-            _reactSimpleMaps.ZoomableGroup,
-            { center: [0, 20], disablePanning: true },
-            _react2.default.createElement(
-              _reactSimpleMaps.Geographies,
-              { geography: '/static/world-50m.json' },
-              function (geographies, projection) {
-                return geographies.map(function (geography, i) {
-                  return geography.id !== "ATA" && _react2.default.createElement(_reactSimpleMaps.Geography, {
-                    key: i,
-                    geography: geography,
-                    projection: projection,
-                    style: {
-                      default: {
-                        fill: "#ECEFF1",
-                        stroke: "#607D8B",
-                        strokeWidth: 0.75,
-                        outline: "none"
-                      },
-                      hover: {
-                        fill: "#607D8B",
-                        stroke: "#607D8B",
-                        strokeWidth: 0.75,
-                        outline: "none"
-                      },
-                      pressed: {
-                        fill: "#FF5722",
-                        stroke: "#607D8B",
-                        strokeWidth: 0.75,
-                        outline: "none"
-                      }
-                    }
-                  });
-                });
+            _reactSimpleMaps.ComposableMap,
+            {
+              projectionConfig: {
+                scale: 205,
+                rotation: [-11, 0, 0]
+              },
+              width: 980,
+              height: 551,
+              style: {
+                width: "100%",
+                height: "auto"
               }
+            },
+            _react2.default.createElement(
+              _reactSimpleMaps.ZoomableGroup,
+              { center: this.state.center, zoom: this.state.zoom },
+              _react2.default.createElement(
+                _reactSimpleMaps.Geographies,
+                { geography: '/static/world-50m.json' },
+                function (geographies, projection) {
+                  return geographies.map(function (geography, i) {
+                    return geography.id !== "ATA" && _react2.default.createElement(_reactSimpleMaps.Geography, {
+                      key: i,
+                      geography: geography,
+                      projection: projection,
+                      onClick: _this2.handleGeographyClick,
+                      style: {
+                        default: {
+                          fill: "#ECEFF1",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        },
+                        hover: {
+                          fill: "#607D8B",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        },
+                        pressed: {
+                          fill: "#FF5722",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        }
+                      }
+                    });
+                  });
+                }
+              ),
+              _react2.default.createElement(
+                _reactSimpleMaps.Markers,
+                null,
+                this.props.parks.map(function (marker, i) {
+                  return _this2.ifOperating(marker, i);
+                })
+              )
+            )
+          )
+        ),
+        _react2.default.createElement(
+          'div',
+          { style: map_style_2 },
+          _react2.default.createElement(
+            _reactSimpleMaps.ComposableMap,
+            {
+              projectionConfig: {
+                scale: 205,
+                rotation: [-11, 0, 0]
+              },
+              width: 980,
+              height: 551,
+              style: {
+                width: "100%",
+                height: "auto"
+              }
+            },
+            _react2.default.createElement(
+              _reactSimpleMaps.ZoomableGroup,
+              { center: this.state.center, zoom: this.state.zoom },
+              _react2.default.createElement(
+                _reactSimpleMaps.Geographies,
+                { geography: '/static/state_2.json' },
+                function (geographies, projection) {
+                  return geographies.map(function (geography, i) {
+                    return geography.id !== "ATA" && _react2.default.createElement(_reactSimpleMaps.Geography, {
+                      key: i,
+                      geography: geography,
+                      projection: projection,
+                      onClick: _this2.handleGeographyClick,
+                      style: {
+                        default: {
+                          fill: "#ECEFF1",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        },
+                        hover: {
+                          fill: "#607D8B",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        },
+                        pressed: {
+                          fill: "#FF5722",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        }
+                      }
+                    });
+                  });
+                }
+              ),
+              _react2.default.createElement(
+                _reactSimpleMaps.Markers,
+                null,
+                this.props.parks.map(function (marker, i) {
+                  return _this2.ifOperating(marker, i);
+                })
+              )
             )
           )
         )
@@ -59856,8 +60079,14 @@ var Feature = function (_Component) {
   return Feature;
 }(_react.Component);
 
+Feature.defaultProps = {
+  width: 800,
+  height: 450
+};
+
+
 function mapStateToProps(state) {
-  return { message: state.auth.message };
+  return { parks: state.park.parks || [] };
 }
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, actions)(Feature);
@@ -60035,7 +60264,7 @@ var Header = function (_Component) {
           _react2.default.createElement(
             _reactRouterDom.Link,
             { to: '/', className: 'navbar-brand' },
-            'Redux Auth'
+            'Counting Coasters'
           ),
           _react2.default.createElement(
             'ul',
@@ -60060,9 +60289,73 @@ exports.default = (0, _reactRedux.connect)(mapStateToProps)(Header);
 
 /***/ }),
 
-/***/ "./src/components/welcome.js":
+/***/ "./src/components/main.js":
+/*!********************************!*\
+  !*** ./src/components/main.js ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _map = __webpack_require__(/*! ./map/map */ "./src/components/map/map.js");
+
+var _map2 = _interopRequireDefault(_map);
+
+var _rightPanel = __webpack_require__(/*! ./rightPanel/rightPanel */ "./src/components/rightPanel/rightPanel.js");
+
+var _rightPanel2 = _interopRequireDefault(_rightPanel);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Main = function (_Component) {
+  _inherits(Main, _Component);
+
+  function Main() {
+    _classCallCheck(this, Main);
+
+    return _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).apply(this, arguments));
+  }
+
+  _createClass(Main, [{
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(_map2.default, null),
+        _react2.default.createElement(_rightPanel2.default, null)
+      );
+    }
+  }]);
+
+  return Main;
+}(_react.Component);
+
+exports.default = Main;
+
+/***/ }),
+
+/***/ "./src/components/map/map.js":
 /*!***********************************!*\
-  !*** ./src/components/welcome.js ***!
+  !*** ./src/components/map/map.js ***!
   \***********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -60074,19 +60367,344 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+
+var _parkAction = __webpack_require__(/*! ../../actions/parkAction */ "./src/actions/parkAction.js");
+
+var actions = _interopRequireWildcard(_parkAction);
+
+var _reactSimpleMaps = __webpack_require__(/*! react-simple-maps */ "./node_modules/react-simple-maps/lib/index.js");
+
+var _d3Geo = __webpack_require__(/*! d3-geo */ "./node_modules/d3-geo/index.js");
+
+var _d3GeoProjection = __webpack_require__(/*! d3-geo-projection */ "./node_modules/d3-geo-projection/index.js");
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+__webpack_require__(/*! ../../../styles/map.scss */ "./styles/map.scss");
+
+var wrapperStyles = {
+  width: "100%",
+  maxWidth: "75%",
+  display: "inline-block"
+};
+
+var Map = function (_Component) {
+  _inherits(Map, _Component);
+
+  function Map() {
+    _classCallCheck(this, Map);
+
+    var _this = _possibleConstructorReturn(this, (Map.__proto__ || Object.getPrototypeOf(Map)).call(this));
+
+    _this.state = {
+      center: [0, 20],
+      zoom: 1,
+      currentCountry: null,
+      marks: []
+    };
+    _this.projection = _this.projection.bind(_this);
+    _this.handleGeographyClick = _this.handleGeographyClick.bind(_this);
+    _this.ifOperating = _this.ifOperating.bind(_this);
+    return _this;
+  }
+
+  _createClass(Map, [{
+    key: 'componentWillMount',
+    value: function componentWillMount() {
+      this.props.getParks();
+    }
+  }, {
+    key: 'projection',
+    value: function projection() {
+      return (0, _d3GeoProjection.geoTimes)().translate([this.props.width / 2, this.props.height / 2]).scale(80);
+    }
+  }, {
+    key: 'ifOperating',
+    value: function ifOperating(park, i, width) {
+      //ark.status == "Operating" && park.coasters.length > 10
+      if (park.status == "Operating" && park.coasters.length > 5 && park.long && park.lat) {
+        return _react2.default.createElement(
+          _reactSimpleMaps.Marker,
+          {
+            key: i,
+            marker: { name: park.name, coordinates: [park.long, park.lat] },
+            style: {
+              default: { fill: "#FF5722" },
+              hover: { fill: "#FFFFFF" },
+              pressed: { fill: "#FF5722" }
+            } },
+          _react2.default.createElement('circle', {
+            cx: 0,
+            cy: 0,
+            r: 1,
+            style: {
+              stroke: "#FF5722",
+              strokeWidth: width,
+              opacity: 0.9
+            } }),
+          _react2.default.createElement(
+            'text',
+            {
+              textAnchor: 'middle',
+              className: 'park-name',
+              y: park.markerOffset,
+              style: {
+                fontFamily: "Roboto, sans-serif",
+                fill: "#607D8B",
+                display: "none"
+              } },
+            park.name
+          )
+        );
+      } else {
+        return null;
+      }
+    }
+  }, {
+    key: 'handleGeographyClick',
+    value: function handleGeographyClick(geography) {
+      // geography looks something like this:
+      // { type: "Feature",  properties: {...}, geometry: {...} }
+      var path = (0, _d3Geo.geoPath)().projection(this.projection());
+      console.log(geography);
+      console.log(path.centroid(geography));
+      var centroid = this.projection().invert(path.centroid(geography));
+      this.setState({
+        center: centroid,
+        zoom: 35,
+        currentCountry: geography.properties.name
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
+
+      var map_style_1 = { display: "block" };
+      var map_style_2 = { display: "none" };
+      if (this.state.zoom >= 6) {
+        map_style_1 = { display: "none" };
+        map_style_2 = { display: "block" };
+      }
+      return _react2.default.createElement(
+        'div',
+        { style: wrapperStyles },
+        _react2.default.createElement(
+          'div',
+          { style: map_style_1 },
+          _react2.default.createElement(
+            _reactSimpleMaps.ComposableMap,
+            {
+              projectionConfig: {
+                scale: 205,
+                rotation: [-11, 0, 0]
+              },
+              width: 980,
+              height: 551,
+              style: {
+                width: "100%",
+                height: "auto"
+              } },
+            _react2.default.createElement(
+              _reactSimpleMaps.ZoomableGroup,
+              { center: this.state.center, zoom: this.state.zoom, disablePanning: true },
+              _react2.default.createElement(
+                _reactSimpleMaps.Geographies,
+                { geography: '/static/world-50m.json' },
+                function (geographies, projection) {
+                  return geographies.map(function (geography, i) {
+                    return geography.id !== "ATA" && _react2.default.createElement(_reactSimpleMaps.Geography, {
+                      key: i,
+                      geography: geography,
+                      projection: projection,
+                      onClick: _this2.handleGeographyClick,
+                      style: {
+                        default: {
+                          fill: "#ECEFF1",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        },
+                        hover: {
+                          fill: "#607D8B",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        },
+                        pressed: {
+                          fill: "#FF5722",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        }
+                      }
+                    });
+                  });
+                }
+              ),
+              _react2.default.createElement(
+                _reactSimpleMaps.Markers,
+                null,
+                this.props.parks.map(function (marker, i) {
+                  return _this2.ifOperating(marker, i, 1);
+                })
+              )
+            )
+          )
+        ),
+        _react2.default.createElement(
+          'div',
+          { style: map_style_2 },
+          _react2.default.createElement(
+            _reactSimpleMaps.ComposableMap,
+            {
+              projectionConfig: {
+                scale: 205,
+                rotation: [-11, 0, 0]
+              },
+              width: 980,
+              height: 551,
+              style: {
+                width: "100%",
+                height: "auto"
+              }
+            },
+            _react2.default.createElement(
+              _reactSimpleMaps.ZoomableGroup,
+              { center: this.state.center, zoom: this.state.zoom },
+              _react2.default.createElement(
+                _reactSimpleMaps.Geographies,
+                { geography: '/static/state_2.json' },
+                function (geographies, projection) {
+                  return geographies.map(function (geography, i) {
+                    return geography.id !== "ATA" && _react2.default.createElement(_reactSimpleMaps.Geography, {
+                      key: i,
+                      geography: geography,
+                      projection: projection,
+                      style: {
+                        default: {
+                          fill: "#ECEFF1",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        },
+                        hover: {
+                          fill: "#607D8B",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        },
+                        pressed: {
+                          fill: "#FF5722",
+                          stroke: "#607D8B",
+                          strokeWidth: 0.1,
+                          outline: "none"
+                        }
+                      }
+                    });
+                  });
+                }
+              ),
+              _react2.default.createElement(
+                _reactSimpleMaps.Markers,
+                null,
+                this.props.parks.map(function (marker, i) {
+                  return _this2.ifOperating(marker, i, 20);
+                })
+              )
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return Map;
+}(_react.Component);
+
+Map.defaultProps = {
+  width: 800,
+  height: 450
+};
+
+
+function mapStateToProps(state) {
+  return { parks: state.park.parks || [] };
+}
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, actions)(Map);
+
+/***/ }),
+
+/***/ "./src/components/rightPanel/rightPanel.js":
+/*!*************************************************!*\
+  !*** ./src/components/rightPanel/rightPanel.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _react = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 
 var _react2 = _interopRequireDefault(_react);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = function () {
-  return _react2.default.createElement(
-    'div',
-    null,
-    'Welcome to our slice of paradise'
-  );
-};
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+__webpack_require__(/*! ../../../styles/rightPanel.scss */ "./styles/rightPanel.scss");
+
+var RightPanel = function (_Component) {
+  _inherits(RightPanel, _Component);
+
+  function RightPanel() {
+    _classCallCheck(this, RightPanel);
+
+    return _possibleConstructorReturn(this, (RightPanel.__proto__ || Object.getPrototypeOf(RightPanel)).apply(this, arguments));
+  }
+
+  _createClass(RightPanel, [{
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        { className: 'right-panel' },
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae libero fringilla, commodo lectus at, facilisis lacus. Mauris at orci eu dui scelerisque lacinia et sit amet diam. Aliquam a felis in sapien placerat vehicula. Nam vitae luctus diam, eget interdum nisl. Nullam porttitor non quam a semper. Suspendisse tincidunt ultrices ex a rutrum. Curabitur in lectus augue. Sed ac dolor quis elit tempor cursus ut ac metus. Maecenas tempus, nisl lacinia ultrices mattis, tortor erat condimentum sapien, at ultricies libero elit ut nisi. Cras purus lectus, dignissim lacinia bibendum ut, porta eu lacus. Vivamus ultrices neque ex, nec convallis orci faucibus dignissim. In pretium, dui vitae suscipit sollicitudin, felis lectus pharetra massa, auctor lobortis sem sapien a mauris. Maecenas congue velit sed volutpat dapibus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Aliquam cursus, metus eu viverra bibendum, lacus erat varius ligula, ut commodo sapien dui ut neque. Donec nec porttitor dolor. Etiam sagittis luctus malesuada. Phasellus sollicitudin ipsum id tristique mattis. Quisque iaculis pulvinar tellus eu pharetra. Quisque aliquam rhoncus sem, id elementum nisl iaculis ac. Donec interdum rhoncus odio quis fermentum. Vivamus eget nulla et ipsum lacinia mattis. Fusce lacinia varius suscipit. Nunc id est at dolor posuere semper in id nisi. Praesent sagittis sollicitudin purus at volutpat. Nunc auctor nisi velit, id vulputate dolor venenatis a. Nam ut nisl eget turpis vehicula imperdiet a sit amet turpis. Donec at eros scelerisque, tincidunt odio in, feugiat ipsum. Donec ultrices massa id dui vulputate sagittis. Morbi semper pellentesque odio, nec sagittis sapien vehicula quis. Pellentesque convallis nisi ac est dictum, ut consectetur nulla condimentum. Nullam vulputate at mauris eu mattis. Vestibulum consequat feugiat lorem, eget porta lacus facilisis ut. Suspendisse sit amet fermentum ipsum. Phasellus id est libero. Curabitur aliquam est mauris, et commodo arcu mollis vitae. Nulla sed erat eros. Aenean ullamcorper tempus aliquet. Nulla ullamcorper mattis nisl, nec dignissim mi tristique vel. In pharetra ut nulla in malesuada. Vestibulum ultricies dictum arcu, sed consequat leo tincidunt at. Proin turpis ante, viverra non felis sit amet, pulvinar ultrices turpis. Nullam tincidunt dapibus velit. Maecenas vel ipsum id est euismod euismod tincidunt vitae nisl. Ut egestas bibendum ante, at efficitur mi. Ut sed dolor sed risus fermentum faucibus ac lacinia purus. Suspendisse tristique eleifend nisl at cursus. Donec sollicitudin sagittis convallis. Vivamus et tempus leo, eu volutpat massa. Integer eget purus semper, vehicula purus vitae, ullamcorper turpis. Aliquam placerat nec odio vel viverra. Maecenas vel venenatis tellus, et mattis dolor. Vivamus eu tincidunt lacus. Morbi lobortis ipsum hendrerit, consequat lacus porttitor, vestibulum justo. Duis felis quam, dignissim sit amet blandit nec, imperdiet eget metus. Suspendisse dui velit, blandit eget vestibulum vel, euismod nec massa. Nunc et quam maximus, vestibulum sapien a, fringilla massa. Curabitur ultrices purus eget ex tincidunt venenatis. Curabitur vel tincidunt felis. Morbi nec nulla enim. Nunc commodo consectetur lectus sit amet mollis.'
+      );
+    }
+  }]);
+
+  return RightPanel;
+}(_react.Component);
+
+exports.default = RightPanel;
 
 /***/ }),
 
@@ -60134,6 +60752,8 @@ var _types = __webpack_require__(/*! ./actions/types */ "./src/actions/types.js"
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+__webpack_require__(/*! ../styles/style.scss */ "./styles/style.scss");
+
 var createStoreWithMiddleware = (0, _redux.applyMiddleware)(_reduxThunk2.default)(_redux.createStore);
 var store = createStoreWithMiddleware(_reducers2.default);
 
@@ -60156,7 +60776,7 @@ _reactDom2.default.render(_react2.default.createElement(
       _react2.default.createElement(_routes2.default, null)
     )
   )
-), document.querySelector('.container'));
+), document.querySelector('.app'));
 
 /***/ }),
 
@@ -60302,16 +60922,53 @@ var _account = __webpack_require__(/*! ./account */ "./src/reducers/account.js")
 
 var _account2 = _interopRequireDefault(_account);
 
+var _park = __webpack_require__(/*! ./park */ "./src/reducers/park.js");
+
+var _park2 = _interopRequireDefault(_park);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var rootReducer = (0, _redux.combineReducers)({
   form: _reduxForm.reducer,
   auth: _auth2.default,
   flash: _flash2.default,
-  account: _account2.default
+  account: _account2.default,
+  park: _park2.default
 });
 
 exports.default = rootReducer;
+
+/***/ }),
+
+/***/ "./src/reducers/park.js":
+/*!******************************!*\
+  !*** ./src/reducers/park.js ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.default = function () {
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var action = arguments[1];
+
+    switch (action.type) {
+
+        case _types.PARKS_GET:
+            return _extends({}, state, { error: '', parks: action.payload });
+    }
+    return state;
+};
+
+var _types = __webpack_require__(/*! ../actions/types */ "./src/actions/types.js");
 
 /***/ }),
 
@@ -60367,10 +61024,6 @@ var _require_auth = __webpack_require__(/*! ./components/auth/require_auth */ ".
 
 var _require_auth2 = _interopRequireDefault(_require_auth);
 
-var _welcome = __webpack_require__(/*! ./components/welcome */ "./src/components/welcome.js");
-
-var _welcome2 = _interopRequireDefault(_welcome);
-
 var _confirmation = __webpack_require__(/*! ./components/auth/confirmation */ "./src/components/auth/confirmation.js");
 
 var _confirmation2 = _interopRequireDefault(_confirmation);
@@ -60387,13 +61040,21 @@ var _editpassword = __webpack_require__(/*! ./components/account/editpassword */
 
 var _editpassword2 = _interopRequireDefault(_editpassword);
 
+var _map = __webpack_require__(/*! ./components/map/map */ "./src/components/map/map.js");
+
+var _map2 = _interopRequireDefault(_map);
+
+var _main = __webpack_require__(/*! ./components/main */ "./src/components/main.js");
+
+var _main2 = _interopRequireDefault(_main);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var RoutesLib = function RoutesLib() {
     return _react2.default.createElement(
         _reactRouterDom.Switch,
         null,
-        _react2.default.createElement(_reactRouterDom.Route, { path: '/', exact: true, component: _welcome2.default }),
+        _react2.default.createElement(_reactRouterDom.Route, { path: '/', exact: true, component: _main2.default }),
         _react2.default.createElement(_reactRouterDom.Route, { path: '/signin', component: _signin2.default }),
         _react2.default.createElement(_reactRouterDom.Route, { path: '/signout', component: _signout2.default }),
         _react2.default.createElement(_reactRouterDom.Route, { path: '/signup', component: _signup2.default }),
@@ -60415,6 +61076,39 @@ exports.default = RoutesLib;
 /*!****************************!*\
   !*** ./styles/header.scss ***!
   \****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ "./styles/map.scss":
+/*!*************************!*\
+  !*** ./styles/map.scss ***!
+  \*************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ "./styles/rightPanel.scss":
+/*!********************************!*\
+  !*** ./styles/rightPanel.scss ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// extracted by mini-css-extract-plugin
+
+/***/ }),
+
+/***/ "./styles/style.scss":
+/*!***************************!*\
+  !*** ./styles/style.scss ***!
+  \***************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 

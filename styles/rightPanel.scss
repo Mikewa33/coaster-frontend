@@ -1,0 +1,8 @@
+.right-panel {
+    padding: 20px 40px 0px 40px;
+    width:calc(30% - 80px);
+    float: right;
+    background: gray;
+    height:calc(100vh - 68px);
+    overflow: scroll;
+}
