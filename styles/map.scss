@@ -4,3 +4,9 @@
         display: block !important;
     }
 }
+.park-mark:hover + .park-name {
+	display: block !important;
+}
+.park-name {
+    background: white;
+}

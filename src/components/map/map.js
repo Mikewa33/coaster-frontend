@@ -11,6 +11,8 @@ import {
 } from "react-simple-maps"
 import { geoPath } from "d3-geo"
 import { geoTimes } from "d3-geo-projection"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSearchPlus, faSearchMinus } from '@fortawesome/free-solid-svg-icons'
 
 require('../../../styles/map.scss');
 
@@ -38,6 +40,11 @@ class Map extends Component {
         this.projection = this.projection.bind(this);
         this.handleGeographyClick = this.handleGeographyClick.bind(this);
         this.ifOperating = this.ifOperating.bind(this);
+        this.zoomIn = this.zoomIn.bind(this);
+        this.zoomOut = this.zoomOut.bind(this);
+        this.mouseOver = this.mouseOver.bind(this);
+        this.mouseOff = this.mouseOff.bind(this);
+        this.handleMarkerClick = this.handleMarkerClick.bind(this);
     }
 
     componentWillMount(){
@@ -50,40 +57,71 @@ class Map extends Component {
         .scale(80)
     }
 
+    mouseOver(){
+      console.log("MOUSE ON")
+    }
+
+    mouseOff(){
+      console.log("mOUSE")
+    }
+
+    zoomIn(){
+      if(this.state.zoom < 35){
+        this.setState({zoom: this.state.zoom + 5})
+      }
+    }
+
+    zoomOut(){
+      if(this.state.zoom > 1){
+        if (this.state.zoom - 5 === 1){
+          this.setState({zoom: this.state.zoom - 5, center: [0,20]})
+        }else{
+          this.setState({zoom: this.state.zoom - 5})
+        }
+        
+      }
+    }
+
     ifOperating(park,i, width){
         //ark.status == "Operating" && park.coasters.length > 10
-        if (park.status == "Operating" && park.coasters.length > 5 && park.long && park.lat){
+        let coasters_need = 5
+        if (this.state.zoom > 30){
+          coasters_need = 1
+        }else if(this.state.zoom > 20){
+          coasters_need = 3
+        }
+        if (park.status == "Operating" && park.coasters.length > coasters_need && park.long && park.lat){
           return (
             <Marker
-                key={i}
-                marker= {{name: park.name, coordinates: [park.long, park.lat] }}
-                style={{
-                    default: { fill: "#FF5722" },
-                    hover: { fill: "#FFFFFF" },
-                    pressed: { fill: "#FF5722" },
+              key={i}
+              onClick={this.handleMarkerClick}
+              marker={{name: park.name, coordinates: [park.long, park.lat] }}
+              style={{
+                default: { stroke: "#455A64" },
+                hover: { stroke: "green" },
+                pressed: { stroke: "#FF5722" },
             }}>
-                <circle
-                    cx={0}
-                    cy={0}
-                    r={1}
-                    style={{
-                        stroke: "#FF5722",
-                        strokeWidth: width,
-                        opacity: 0.9,
-                }}/>
-                <text
-                    textAnchor="middle"
-                    className="park-name"
-                    y={park.markerOffset}
-                    style={{
-                      fontFamily: "Roboto, sans-serif",
-                      fill: "#607D8B",
-                      display: "none"
-                    }}>
-                    {park.name}
-                </text>          
+              <circle
+                r={5}
+                className="park-mark"
+                style={{
+                stroke: "#FF5722",
+                strokeWidth: 1,
+                opacity: 0.9,
+              }}/>
+              <text
+                textAnchor="middle"
+                className="park-name"
+                style={{
+                  transform: "translate(0px,-10px)",
+                  fontFamily: "Roboto, sans-serif",
+                  fill: "#607D8B",
+                  display: "none"
+              }}>
+                {park.name}
+              </text>
             </Marker>
-          )
+        )
         }else{
           return null
         }
@@ -93,14 +131,28 @@ class Map extends Component {
         // geography looks something like this:
         // { type: "Feature",  properties: {...}, geometry: {...} }
         const path = geoPath().projection(this.projection())
-        console.log(geography)
-        console.log(path.centroid(geography))
         const centroid = this.projection().invert(path.centroid(geography))
+        console.log(centroid)
         this.setState({
           center: centroid,
-          zoom: 35,
+          zoom: 6,
           currentCountry: geography.properties.name,
         })
+    }
+
+    handleMarkerClick(event) {
+      console.log(event)
+      if(this.state.zoom != 36){
+        this.setState({
+          center: event.coordinates,
+          zoom: 36
+        })
+      }else{
+        this.setState({
+          center: event.coordinates
+        })
+      }
+      
     }
 
 
@@ -114,6 +166,11 @@ class Map extends Component {
         }
         return (
           <div style={wrapperStyles}>
+            <div className="map-buttons">
+              <FontAwesomeIcon icon={faSearchPlus} onClick={this.zoomIn} />
+              <FontAwesomeIcon icon={faSearchMinus} onClick={this.zoomOut}/>
+
+            </div>
             <div style={map_style_1}>
               <ComposableMap
                 projectionConfig={{
@@ -193,13 +250,13 @@ class Map extends Component {
                             outline: "none",
                           },
                           hover: {
-                            fill: "#607D8B",
+                            fill: "#ECEFF1",
                             stroke: "#607D8B",
                             strokeWidth: 0.01,
                             outline: "none",
                           },
                           pressed: {
-                            fill: "#FF5722",
+                            fill: "#ECEFF1",
                             stroke: "#607D8B",
                             strokeWidth: 0.01,
                             outline: "none",
