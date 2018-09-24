@@ -22,13 +22,14 @@ const wrapperStyles = {
     display: "inline-block"
   }
   
+  const defaultProps = {
+    width: 800,
+    height: 450,
+  }
 
 
 class Map extends Component {
-    static defaultProps = {
-        width: 800,
-        height: 450,
-      }
+    
     constructor() {
         super()
         this.state = {

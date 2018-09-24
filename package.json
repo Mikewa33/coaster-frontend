@@ -7,7 +7,7 @@
   "scripts": {
     "start:dev": "webpack-dev-server",
     "dev": "webpack --config webpack.config.js",
-    "test": "mocha -r mock-local-storage --compilers js:babel-core/register --require ./test/test_helper.js --recursive ./test",
+    "test": "mocha -r mock-local-storage --compilers js:babel-register --require ./test/test_helper.js --recursive ./test",
     "test:watch": "npm run test -- --watch",
     "coverage": "babel-node ./node_modules/.bin/isparta cover --include 'src/**/*.js*' _mocha"
   },

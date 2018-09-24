@@ -17,13 +17,12 @@ const wrapperStyles = {
   maxWidth: 980,
   margin: "0 auto",
 }
-
+const defaultProps = {
+  width: 800,
+  height: 450,
+}
 
 class Feature extends Component {
-  static defaultProps = {
-    width: 800,
-    height: 450,
-  }
   constructor() {
     super()
     this.state = {

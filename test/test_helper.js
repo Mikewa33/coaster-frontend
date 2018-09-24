@@ -17,6 +17,13 @@ const $ = _$(window);
 
 chaiJquery(chai, chai.util, $);
 
+require.extensions['.scss'] = () => {
+  return;
+};
+require.extensions['.css'] = () => {
+  return;
+};
+
 function renderComponent(ComponentClass, props = {}, state = {}) {
   const componentInstance =  TestUtils.renderIntoDocument(
     <Provider store={createStore(reducers, state)}>
