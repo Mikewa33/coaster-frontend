@@ -64,9 +64,9 @@ export function signinUser({ email, password }, callback) {
   }
 }
 
-export function signupUser({ email, password }) {
+export function signupUser({ email, password, username }) {
   return function(dispatch) {
-    return axios.post(`${ROOT_URL}/signup`, { email, password })
+    return axios.post(`${ROOT_URL}/signup`, { email, password, username })
       .then(response => {
         dispatch(emailWasSent(response.data.return_msg));
       })

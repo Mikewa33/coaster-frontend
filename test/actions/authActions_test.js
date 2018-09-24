@@ -90,12 +90,12 @@ describe('auth actions', () => {
 
   describe('signupUser', () => {
     it('has the correct type and payload', () => {
-      var scope = nock(ROOT_URL).post('/signup',function(body) {return { email: 'test@gmail.com', password: "test"}}).reply(200,{ return_msg:"Plase confirm email" });
+      var scope = nock(ROOT_URL).post('/signup',function(body) {return { email: 'test@gmail.com', password: "test", username: "test1"}}).reply(200,{ return_msg:"Plase confirm email" });
       const store = mockStore({});
       //Only checks payload don't care if redirect is correct
-      return store.dispatch(actions.signupUser('test@gmail.com',"test")).then(() => {
+      return store.dispatch(actions.signupUser('test@gmail.com',"test", "test1")).then(() => {
         const act = store.getActions();
-        const expectedPayload = { type: AUTH_EMAIL_SENT, payload: "Plase confirm email" }
+        const expectedPayload = { type: AUTH_EMAIL_SENT, payload: "Please confirm email" }
         expect(act[0].type).to.equal(expectedPayload.type);
         expect(act[0].payload).to.equal(expectedPayload.payload);
       })

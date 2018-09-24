@@ -13,6 +13,10 @@ describe('Signout', () => {
     expect(component).to.have.class('sign-up');
   });
 
+  it('has a username input', () => {
+    expect(component.find('#username-input')).to.have.id('username-input');
+  });
+
   it('has a email input', () => {
     expect(component.find('#email-input')).to.have.id('email-input');
   });
@@ -23,6 +27,16 @@ describe('Signout', () => {
 
   it('has a confirm password input', () => {
     expect(component.find('#password-confirm-input')).to.have.id('password-confirm-input');
+  });
+
+  describe('entering some text into username', () => {
+    beforeEach(() => {
+      component.find('#username-input').simulate('change', 'test1');
+    });
+
+    it('shows that text in the textarea', () => {
+      expect(component.find('#username-input')).to.have.value('test1');
+    });
   });
 
   describe('entering some text into email', () => {

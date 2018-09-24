@@ -43,6 +43,9 @@ class Signup extends Component {
       return (
         <div className="sign-up">
           <form onSubmit={handleSubmit(this.handleFormSubmit.bind(this))}>
+          <fieldset className="form-group">
+               <Field name="username" type="text" component={renderInput} id="username-input" label="Username" />
+            </fieldset>
             <fieldset className="form-group">
                <Field name="email" type="email" component={renderInput} id="email-input" label="Email" />
             </fieldset>
@@ -65,7 +68,11 @@ function validate(formProps) {
   const errors = {};
 
   if (!formProps.email) {
-    errors.email = 'Please enter an email';
+    errors.email = 'Please enter a email';
+  }
+
+  if(!formProps.username) {
+    errors.username = "Please enter a username";
   }
 
   if (!formProps.password) {
