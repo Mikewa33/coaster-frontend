@@ -23,7 +23,8 @@ class SearchList extends Component {
         this.onInputChange = this.onInputChange.bind(this);
         this.selectPark = this.selectPark.bind(this);
         this.selectCoaster = this.selectCoaster.bind(this);
-        this.backArrow = this.backArrow.bind(this);
+        this.backArrowPark = this.backArrowPark.bind(this);
+        this.backArrowCoaster = this.backArrowCoaster.bind(this);
 
     }
 
@@ -66,25 +67,29 @@ class SearchList extends Component {
         }
     }
 
-    selectPark(key){
-        console.log(key)
-        this.setState({selectedPark: key })
+    selectPark(park){
+        this.setState({selectedPark: park })
     }
 
-    selectCoaster(key){
-        this.setState({selectedCoaster: (key-10000) })
+    selectCoaster(coaster){
+        this.setState({selectedCoaster: coaster })
     }
 
-    backArrow(){
-        this.setState({selectedCoaster: null, selectedPark: null })
+    backArrowPark(){
+        this.setState({selectedPark: null })
+    }
+    //This is so in park we can go back when selecting a coaster in park
+    backArrowCoaster(){
+        his.setState({selectedCoaster: null })
     }
 
 
     renderListOrDetail(){
-        if(this.state.selectedPark != null){
-            return (<ParkDetail park={this.state.currentlyDisplayedParks[this.state.selectedPark]} backArrow={this.backArrow} />)
-        }else if(this.state.selectedCoaster != null){
-            return (<CoasterDetail coaster={this.state.currentlyDisplayedCoasters[this.state.selectedCoaster]} backArrow={this.backArrow} />)
+        if(this.state.selectedCoaster != null){
+            return (<CoasterDetail coaster={this.state.selectedCoaster} selectPark={this.selectPark} backArrow={this.backArrow} />)
+        }
+        else if(this.state.selectedPark != null){
+            return (<ParkDetail park={this.state.selectedPark} selectCoaster={this.selectCoaster} backArrow={this.backArrowPark} />)
         }else if(this.state.searchTeam.length == 0){
             return (
                 <div className="search-list">
@@ -101,11 +106,12 @@ class SearchList extends Component {
                     <input type="text" placeholder="Search.." value={this.state.searchTeam} onChange={this.onInputChange}></input>
                     {this.parkHeader()}
                     {this.state.currentlyDisplayedParks.map((park, i) => (
-                        <ParkList key={i} value={i} selectPark={this.selectPark} park={park}  />
+                        <ParkList key={i} value={i} selectPark={this.selectPark}  park={park}  />
                     ))}
                     {this.coasterHeader()}
                     {this.state.currentlyDisplayedCoasters.map((coaster, i) => (
-                        <CoasterList key={i+10000} value={i+10000} selectCoaster={this.selectCoaster} coaster={coaster}  />
+                        //Look into changing coaster so it has park inside it
+                        <CoasterList key={i+10000} value={i+10000} selectCoaster={this.selectCoaster} coaster={coaster}/>
                     ))}
                 </div>
             );

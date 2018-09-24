@@ -5,7 +5,7 @@ require('../../../styles/rightPanel.scss');
 
 class ParkList extends Component {
     handleClick = () => {
-        this.props.selectPark(this.props.value);
+        this.props.selectPark(this.props.park);
     }
 
     render() {

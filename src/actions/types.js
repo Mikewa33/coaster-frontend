@@ -10,3 +10,4 @@ export const ACCOUNT_INFO = "account_info";
 export const ACCOUNT_ERROR = "account_error";
 export const PARKS_GET = "parks_get";
 export const PARK_GET = "park_get";
+export const PARK_ERROR = "park_error";

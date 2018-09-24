@@ -4,6 +4,7 @@ import * as actions from '../../actions/parkAction';
 import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {  faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import CoasterList from './coasterList'
 
 require('../../../styles/rightPanel.scss');
 
@@ -25,7 +26,6 @@ class ParkDetail extends Component {
 
   handleKeypress (e) {
     const characterCode = e.key
-    console.log(characterCode)
     if (characterCode === 'Backspace') return
 
     const characterNumber = Number(characterCode)
@@ -61,7 +61,18 @@ class ParkDetail extends Component {
 
   submitForm(){
     let form_value = document.getElementById('park-visit-text-input').value;
-    this.props.setParkVist(this.props.park.id, form_value)
+    this.props.setParkVist(this.props.park.id, Number(form_value), true)
+  }
+
+  renderCoasters(){
+    return (
+      <div className="coaster-list">
+        {this.props.park.coasters.map((coaster, i) => (
+          //Look into changing coaster so it has park inside it
+          <CoasterList key={i+10000} selectCoaster={this.props.selectCoaster} coaster={coaster}/>
+        ))}
+      </div>
+    )
   }
 
   render() {
@@ -77,12 +88,14 @@ class ParkDetail extends Component {
         <button type="button" onClick={this.plusClick}>+</button>
         <input type='number' onKeyDown={this.handleKeypress} min='0' step='1' id="park-visit-text-input"></input>
         <button type="button" onClick={this.submitForm}>Submit Visit Count</button>
+        {this.renderCoasters()}
       </div>
     );
   }
 }
 
 function mapStateToProps(state) {
+    console.log(state.park)
     return {
       current_park: state.park.current_park
     };

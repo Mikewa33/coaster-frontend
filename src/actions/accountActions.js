@@ -72,4 +72,4 @@ function accountError(error) {
       type: ACCOUNT_ERROR,
       payload: error
     };
-  }
+}

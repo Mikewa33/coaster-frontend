@@ -5,7 +5,7 @@ require('../../../styles/rightPanel.scss');
 
 class CoasterList extends Component {
     handleClick = () => {
-        this.props.selectCoaster(this.props.value);
+        this.props.selectCoaster(this.props.coaster);
     }
 
     render() {
